@@ -79,10 +79,11 @@ public class Main {
                 "2. Fund Transfer\n" +
                 "3. Exit\n" +
                 "Please choose option[3]:");
-        int i = scanner.nextInt();
-        switch (i) {
+        int option = scanner.nextInt();
+        boolean shouldContinue = false;
+        switch (option) {
             case 1:
-                printWithdrawScreen(account);
+                shouldContinue = printWithdrawMenu(account);
                 break;
             case 2:
                 printFundTransferScreen(account);
@@ -92,15 +93,55 @@ public class Main {
             default:
                 return true;
         }
-        return false;
+        return shouldContinue;
     }
 
     private static void printFundTransferScreen(Account account) {
         clearScreen();
     }
 
-    private static void printWithdrawScreen(Account account) {
+    private static boolean printWithdrawMenu(Account account) {
         clearScreen();
+        boolean shouldContinue = false;
+        do{
+            shouldContinue = processWithdrawOption();
+        }while (shouldContinue);
+        return true; //To get back to previous menu
+    }
+
+    private static boolean processWithdrawOption() {
+        System.out.print(
+                "1. $10\n" +
+                "2. $50\n" +
+                "3. $100\n" +
+                "4. Other\n" +
+                "5. Back\n" +
+                "Please choose option[5]:");
+        int option = scanner.nextInt();
+        switch (option) {
+            case 1:
+            case 2:
+            case 3:
+                printSummaryScreen();
+                break;
+            case 4:
+                printOtherWithdrawScreen();
+                break;
+            case 5: //Get back to previous menu
+                return false;
+            default:
+                return true;
+        }
+        return false;
+    }
+
+    private static void printSummaryScreen() {
+
+    }
+
+    private static void printOtherWithdrawScreen() {
+
+
     }
 
     private static Account searchAccount(String account, String pin) {
