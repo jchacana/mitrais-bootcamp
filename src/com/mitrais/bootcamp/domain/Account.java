@@ -51,4 +51,10 @@ public class Account {
     public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
     }
+
+    public void withdraw(Long amount) throws Exception {
+        if((balance - amount) < 0 )
+            throw new Exception("Insufficient balance $" + balance);
+        balance = balance - amount;
+    }
 }

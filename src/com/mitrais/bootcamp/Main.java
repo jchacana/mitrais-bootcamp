@@ -3,6 +3,9 @@ package com.mitrais.bootcamp;
 import com.mitrais.bootcamp.domain.Account;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -98,18 +101,19 @@ public class Main {
 
     private static void printFundTransferScreen(Account account) {
         clearScreen();
+
     }
 
     private static boolean printWithdrawMenu(Account account) {
         clearScreen();
         boolean shouldContinue = false;
         do{
-            shouldContinue = processWithdrawOption();
+            shouldContinue = processWithdrawOption(account);
         }while (shouldContinue);
         return true; //To get back to previous menu
     }
 
-    private static boolean processWithdrawOption() {
+    private static boolean processWithdrawOption(Account account) {
         System.out.print(
                 "1. $10\n" +
                 "2. $50\n" +
@@ -118,30 +122,80 @@ public class Main {
                 "5. Back\n" +
                 "Please choose option[5]:");
         int option = scanner.nextInt();
-        switch (option) {
-            case 1:
-            case 2:
-            case 3:
-                printSummaryScreen();
-                break;
-            case 4:
-                printOtherWithdrawScreen();
-                break;
-            case 5: //Get back to previous menu
-                return false;
-            default:
-                return true;
+        try {
+            switch (option) {
+                case 1:
+                    account.withdraw(10L);
+                    return printSummaryScreen(10L, account);
+                case 2:
+                    account.withdraw(50L);
+                    return printSummaryScreen(50L, account);
+                case 3:
+                    account.withdraw(100L);
+                    return printSummaryScreen(100L, account);
+                case 4:
+                    return printOtherWithdrawScreen(account);
+                case 5: //Get back to previous menu
+                    return false;
+                default:
+                    return true;
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
+
         return false;
     }
 
-    private static void printSummaryScreen() {
+    private static boolean printSummaryScreen(Long amount, Account account) {
+        Instant now = Instant.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
 
+        System.out.print(
+                "Date : "+ formatter.format(now) + "\n" +
+                "Withdraw : $" + amount + "\n" +
+                "Balance : $" + account.getBalance() + "\n" +
+                "\n" +
+                "1. Transaction \n" +
+                "2. Exit\n" +
+                "Choose option[2]:");
+        int option;
+        boolean shouldContinue;
+        do {
+            option = scanner.nextInt();
+            switch (option) {
+                case 1:
+                    return false;
+                case 2:
+                    return true;
+                default:
+                    shouldContinue = option != 1 && option != 2;
+                    break;
+            }
+        } while (shouldContinue);
+        return true;
     }
 
-    private static void printOtherWithdrawScreen() {
-
-
+    private static boolean printOtherWithdrawScreen(Account account) {
+        clearScreen();
+        System.out.println("Other Withdraw ");
+        System.out.print("Enter amount to withdraw: ");
+        String possibleNumber = scanner.next();
+        Long amount = 0L;
+        try{
+            amount = Long.parseLong(possibleNumber);
+            if(amount % 10 != 0)
+                throw new Exception("Invalid Amount ");
+            if(amount > 1000)
+                throw new Exception("Maximum amount to withdraw is $1000 ");
+            account.withdraw(amount); //May throw an exception
+            return printSummaryScreen(amount, account);
+        } catch (NumberFormatException ex) {
+            System.out.println("Invalid Amount ");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
     }
 
     private static Account searchAccount(String account, String pin) {
