@@ -6,4 +6,7 @@ For example, it is expected to have very "spaghetti-like" code or everything wit
 
 As the trainee (or me, in this case) starts to pick up the pace, while using the knowledge acquired through each step, it is expected to have a better understanding of the problem and a better design
 
+Update:
+
+- As of now, I have added withdraw capabilities. Again, I'm acting as a trainee, reason why this code looks like this
 
