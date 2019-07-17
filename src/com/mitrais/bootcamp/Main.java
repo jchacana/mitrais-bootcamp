@@ -32,13 +32,13 @@ public class Main {
         } while (show);
     }
 
-    private static boolean showWelcomeScreen() {
+    private static boolean showWelcomeScreen()  {
         clearScreen();
         System.out.print("Enter Account Number: ");
         scanner = new Scanner(System.in);
-        String accountNumber = scanner.next();
+        String accountNumber = scanner.nextLine();
         System.out.print("Enter PIN: ");
-        String pin = scanner.next();
+        String pin = scanner.nextLine();
 
         if(accountNumber.length() != ACCT_LENGHT) {
             System.out.println("Account Number should have "+ACCT_LENGHT+" digits length");
@@ -57,7 +57,7 @@ public class Main {
             return true;
         }
 
-        Account account = searchAccount(accountNumber, pin);
+        Account account = validateAccount(accountNumber, pin);
         if(account == null) {
             System.out.println("Invalid Account Number/PIN");
             return true;
@@ -83,13 +83,14 @@ public class Main {
                 "3. Exit\n" +
                 "Please choose option[3]:");
         int option = scanner.nextInt();
+        scanner.nextLine(); //To avoid moving directly to the end
         boolean shouldContinue = false;
         switch (option) {
             case 1:
                 shouldContinue = printWithdrawMenu(account);
                 break;
             case 2:
-                printFundTransferScreen(account);
+                shouldContinue = printFundTransferScreen(account);
                 break;
             case 3:
                 return false;
@@ -99,9 +100,123 @@ public class Main {
         return shouldContinue;
     }
 
-    private static void printFundTransferScreen(Account account) {
+    private static boolean printFundTransferScreen(Account origin) {
         clearScreen();
+        System.out.print(
+                "Please enter destination account and \n" +
+                "press enter to continue or \n" +
+                "press cancel (Esc) to go back to Transaction: ");
+        String accountNumber = scanner.nextLine();
+        if("".equals(accountNumber)) return true;
+        return printFundTransferScreen2(origin, accountNumber);
+    }
 
+    private static boolean printFundTransferScreen2(Account origin, String accountNumber) {
+        clearScreen();
+        System.out.print(
+                "Please enter transfer amount and \n" +
+                "press enter to continue or \n" +
+                "press cancel (Esc) to go back to Transaction: ");
+        String amount = scanner.nextLine();
+        if("".equals(amount)) return false;
+        return printFundTransferScreen3(origin, amount, accountNumber);
+    }
+
+    private static boolean printFundTransferScreen3(Account origin, String amount, String accountNumber) {
+        clearScreen();
+        System.out.print(
+                "Please enter reference number (Optional) and \n" +
+                "press enter to continue or \n" +
+                "press cancel (Esc) to go back to Transaction: ");
+        String referenceNumber = scanner.nextLine();
+        if("ESC".equals(referenceNumber)) return false;
+        return printFundTransferScreen4(origin, amount, accountNumber, referenceNumber);
+    }
+
+    private static boolean printFundTransferScreen4(Account origin, String amount, String accountNumber, String referenceNumber) {
+        clearScreen();
+        System.out.print(
+                "Transfer Confirmation\n" +
+                "Destination Account : " + accountNumber + "\n" +
+                "Transfer Amount     : $" + amount + "\n" +
+                "Reference Number    : " + referenceNumber + "\n" +
+                "\n" +
+                "1. Confirm Trx\n" +
+                "2. Cancel Trx\n" +
+                "Choose option[2]:");
+
+        boolean shouldContinue;
+        Integer option;
+        do {
+            option = scanner.nextInt();
+            scanner.nextLine();
+            switch (option) {
+                case 1:
+                    return performFundTransfer(origin, amount, accountNumber, referenceNumber);
+                case 2:
+                    return true;
+                default:
+                    shouldContinue = option != 1 && option != 2;
+                    break;
+            }
+        } while (shouldContinue);
+
+        return shouldContinue;
+    }
+
+    private static boolean performFundTransfer(Account origin, String amount, String accountNumber, String referenceNumber) {
+        try {
+            Account destination = searchAccount(accountNumber);
+            Long transferAmount = Long.parseLong(amount);
+            validateReferenceNumber(referenceNumber);
+            origin.withdraw(transferAmount);
+            destination.deposit(transferAmount);
+            return printFundTransferSummaryScreen(origin, transferAmount, accountNumber, referenceNumber);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid Amount");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
+    private static void validateReferenceNumber(String referenceNumber) throws Exception {
+        try {
+            if(!"".equals(referenceNumber)) {
+                Long.parseLong(referenceNumber);
+            }
+        } catch (NumberFormatException e) {
+            throw new Exception("Invalid Reference Number");
+        }
+    }
+
+    private static boolean printFundTransferSummaryScreen(Account origin, Long amount, String accountNumber, String referenceNumber) {
+        System.out.print(
+                "Fund Transfer Summary\n" +
+                "Destination Account : " + accountNumber +"\n" +
+                "Transfer Amount     : $" + amount +"\n" +
+                "Reference Number    : " + referenceNumber +"\n" +
+                "Balance             : $" + origin.getBalance() + "\n" +
+                "\n" +
+                "1. Transaction\n" +
+                "2. Exit\n" +
+                "Choose option[2]:");
+        Integer option;
+        boolean shouldContinue;
+        do {
+            option = scanner.nextInt();
+            scanner.nextLine();
+            switch (option) {
+                case 1:
+                    return true;
+                case 2:
+                    return false;
+                default:
+                    shouldContinue = option != 1 && option != 2;
+                    break;
+            }
+        } while (shouldContinue);
+        return shouldContinue;
     }
 
     private static boolean printWithdrawMenu(Account account) {
@@ -186,8 +301,6 @@ public class Main {
             amount = Long.parseLong(possibleNumber);
             if(amount % 10 != 0)
                 throw new Exception("Invalid Amount ");
-            if(amount > 1000)
-                throw new Exception("Maximum amount to withdraw is $1000 ");
             account.withdraw(amount); //May throw an exception
             return printSummaryScreen(amount, account);
         } catch (NumberFormatException ex) {
@@ -198,12 +311,25 @@ public class Main {
         return false;
     }
 
-    private static Account searchAccount(String account, String pin) {
+    private static Account validateAccount(String account, String pin) {
         for(Account account1: accounts) {
             if(account1.getAccountNumber().equals(account) && account1.getPin().equals(pin))
                return account1;
         }
         return null;
+    }
+
+    private static Account searchAccount(String account) throws Exception {
+        try {
+            Long.parseLong(account);
+            for(Account account1: accounts) {
+                if(account1.getAccountNumber().equals(account))
+                    return account1;
+            }
+            throw new Exception("Invalid account");
+        } catch (NumberFormatException e) {
+            throw new Exception("Invalid account");
+        }
     }
 
     public static void clearScreen() {

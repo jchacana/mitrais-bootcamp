@@ -55,6 +55,14 @@ public class Account {
     public void withdraw(Long amount) throws Exception {
         if((balance - amount) < 0 )
             throw new Exception("Insufficient balance $" + balance);
+        if(amount > 1000)
+            throw new Exception("Maximum amount to withdraw is $1000");
+        if(amount < 1)
+            throw new Exception("Minimum amount to withdraw is $1");
         balance = balance - amount;
+    }
+
+    public void deposit(Long amount) {
+        balance += amount;
     }
 }
