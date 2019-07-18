@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="bootcamp:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/bootcamp_jar</output-path>
+    <root id="archive" name="bootcamp.jar">
+      <element id="module-output" name="bootcamp" />
+    </root>
+  </artifact>
+</component>
