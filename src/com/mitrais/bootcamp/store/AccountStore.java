@@ -25,7 +25,7 @@ public class AccountStore {
     }
 
     public void addAccount(Account account) throws Exception {
-        if(getAccount(account.getAccountNumber()) != null)
+        if(accountExists(account.getAccountNumber()))
             throw new Exception("There can't be 2 different accounts with the same Account Number");
         if(accountExists(account))
             throw new Exception("There can't be duplicated records " + account);
@@ -34,6 +34,19 @@ public class AccountStore {
 
     public boolean accountExists(Account account) {
         return accounts.contains(account);
+    }
+
+    public boolean accountExists(String accountNumber) {
+        try {
+            Long.parseLong(accountNumber);
+            for(Account account1: accounts) {
+                if(account1.getAccountNumber().equals(accountNumber))
+                    return true;
+            }
+            return false;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     public Account getAccount(String accountNumber) throws Exception {

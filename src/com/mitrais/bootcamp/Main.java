@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -23,7 +24,7 @@ public class Main {
     public static void main(String[] args) {
         Main program = new Main();
 
-        program.initializeAccounts();
+        program.initializeAccounts(args);
 
         boolean show;
         do {
@@ -31,15 +32,14 @@ public class Main {
         } while (show);
     }
 
-    private void initializeAccounts() {
+    private void initializeAccounts(String[] args) {
         Account johnDoe = new Account("John Doe", "012108", 100L, "112233");
         Account janeDoe = new Account("Jane Doe", "932012", 30L, "112244");
 
         accountsService.addAccount(johnDoe);
         accountsService.addAccount(janeDoe);
 
-        Set<Account> accounts = accountsService.readAccountsFromFile("/Users/jchacana/dev/Mitrais/code/bootcamp/accounts.csv");
-        accounts.forEach(System.out::println);
+        accountsService.readAccountsFromFile(args[0]);
     }
 
     public Main() {
