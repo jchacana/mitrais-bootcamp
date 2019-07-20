@@ -1,13 +1,12 @@
 package com.mitrais.bootcamp;
 
 import com.mitrais.bootcamp.domain.Account;
+import com.mitrais.bootcamp.store.AccountStore;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -15,7 +14,6 @@ public class Main {
     private static final int ACCT_LENGHT = 6;
     private static final int PIN_LENGHT = 6;
 
-    private static List<Account> accounts = new ArrayList<>();
     private static Scanner scanner;
 
     public static void main(String[] args) {
@@ -23,8 +21,8 @@ public class Main {
         Account johnDoe = new Account("John Doe", "012108", 100L, "112233");
         Account janeDoe = new Account("Jane Doe", "932012", 30L, "112244");
 
-        accounts.add(johnDoe);
-        accounts.add(janeDoe);
+        AccountStore.getInstance().addAccount(johnDoe);
+        AccountStore.getInstance().addAccount(janeDoe);
 
         boolean show;
         do {
@@ -312,24 +310,11 @@ public class Main {
     }
 
     private static Account validateAccount(String account, String pin) {
-        for(Account account1: accounts) {
-            if(account1.getAccountNumber().equals(account) && account1.getPin().equals(pin))
-               return account1;
-        }
-        return null;
+        return AccountStore.getInstance().getAndValidateAccount(account, pin);
     }
 
     private static Account searchAccount(String account) throws Exception {
-        try {
-            Long.parseLong(account);
-            for(Account account1: accounts) {
-                if(account1.getAccountNumber().equals(account))
-                    return account1;
-            }
-            throw new Exception("Invalid account");
-        } catch (NumberFormatException e) {
-            throw new Exception("Invalid account");
-        }
+        return AccountStore.getInstance().getAccount(account);
     }
 
     public static void clearScreen() {
