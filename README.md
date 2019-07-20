@@ -9,4 +9,5 @@ As the trainee (or me, in this case) starts to pick up the pace, while using the
 Update:
 
 - As of now, I have added withdraw capabilities. Again, I'm acting as a trainee, reason why this code looks like this
+- Right now I'm starting to refactor the code. Somethings have emerged naturally, like stores for accounts and transactions, the transaction class itself and service classes. Again, acting as a trainee
 
