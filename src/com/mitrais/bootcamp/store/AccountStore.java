@@ -2,19 +2,19 @@ package com.mitrais.bootcamp.store;
 
 import com.mitrais.bootcamp.domain.Account;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by jchacana on 7/20/19.
  */
 public class AccountStore {
 
-    private static List<Account> accounts;
+    private static Set<Account> accounts;
     private static AccountStore store;
 
     private AccountStore() {
-        accounts = new ArrayList<>();
+        accounts = new HashSet<>();
     }
 
     public static AccountStore getInstance() {
@@ -24,12 +24,16 @@ public class AccountStore {
         return store;
     }
 
-    public void addAccount(Account account) {
+    public void addAccount(Account account) throws Exception {
+        if(getAccount(account.getAccountNumber()) != null)
+            throw new Exception("There can't be 2 different accounts with the same Account Number");
+        if(accountExists(account))
+            throw new Exception("There can't be duplicated records " + account);
         accounts.add(account);
     }
 
-    public Account getAccount(Integer index) {
-        return accounts.get(index);
+    public boolean accountExists(Account account) {
+        return accounts.contains(account);
     }
 
     public Account getAccount(String accountNumber) throws Exception {
@@ -53,4 +57,7 @@ public class AccountStore {
         return null;
     }
 
+    public Set<Account> getAccounts() {
+        return accounts;
+    }
 }

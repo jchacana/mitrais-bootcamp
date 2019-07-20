@@ -65,4 +65,37 @@ public class Account {
     public void deposit(Long amount) {
         balance += amount;
     }
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "name='" + name + '\'' +
+                ", pin='" + pin + '\'' +
+                ", balance=" + balance +
+                ", accountNumber='" + accountNumber + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Account)) return false;
+
+        Account account = (Account) o;
+
+        if (getName() != null ? !getName().equals(account.getName()) : account.getName() != null) return false;
+        if (getPin() != null ? !getPin().equals(account.getPin()) : account.getPin() != null) return false;
+        if (getBalance() != null ? !getBalance().equals(account.getBalance()) : account.getBalance() != null)
+            return false;
+        return getAccountNumber() != null ? getAccountNumber().equals(account.getAccountNumber()) : account.getAccountNumber() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName() != null ? getName().hashCode() : 0;
+        result = 31 * result + (getPin() != null ? getPin().hashCode() : 0);
+        result = 31 * result + (getBalance() != null ? getBalance().hashCode() : 0);
+        result = 31 * result + (getAccountNumber() != null ? getAccountNumber().hashCode() : 0);
+        return result;
+    }
 }

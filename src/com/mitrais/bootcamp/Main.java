@@ -1,6 +1,7 @@
 package com.mitrais.bootcamp;
 
 import com.mitrais.bootcamp.domain.Account;
+import com.mitrais.bootcamp.service.AccountsService;
 import com.mitrais.bootcamp.store.AccountStore;
 
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
+import java.util.Set;
 
 public class Main {
 
@@ -16,24 +18,38 @@ public class Main {
 
     private static Scanner scanner;
 
+    private AccountsService accountsService;
+
     public static void main(String[] args) {
+        Main program = new Main();
 
-        Account johnDoe = new Account("John Doe", "012108", 100L, "112233");
-        Account janeDoe = new Account("Jane Doe", "932012", 30L, "112244");
-
-        AccountStore.getInstance().addAccount(johnDoe);
-        AccountStore.getInstance().addAccount(janeDoe);
+        program.initializeAccounts();
 
         boolean show;
         do {
-            show = showWelcomeScreen();
+            show = program.showWelcomeScreen();
         } while (show);
     }
 
-    private static boolean showWelcomeScreen()  {
+    private void initializeAccounts() {
+        Account johnDoe = new Account("John Doe", "012108", 100L, "112233");
+        Account janeDoe = new Account("Jane Doe", "932012", 30L, "112244");
+
+        accountsService.addAccount(johnDoe);
+        accountsService.addAccount(janeDoe);
+
+        Set<Account> accounts = accountsService.readAccountsFromFile("/Users/jchacana/dev/Mitrais/code/bootcamp/accounts.csv");
+        accounts.forEach(System.out::println);
+    }
+
+    public Main() {
+        accountsService = new AccountsService();
+        scanner = new Scanner(System.in);
+    }
+
+    private boolean showWelcomeScreen()  {
         clearScreen();
         System.out.print("Enter Account Number: ");
-        scanner = new Scanner(System.in);
         String accountNumber = scanner.nextLine();
         System.out.print("Enter PIN: ");
         String pin = scanner.nextLine();
@@ -66,14 +82,14 @@ public class Main {
         return false;
     }
 
-    private static void printTransactionScreen(Account account) {
+    private void printTransactionScreen(Account account) {
         boolean shouldContinue = false;
         do {
             shouldContinue = printMenu(account);
         } while (shouldContinue);
     }
 
-    private static boolean printMenu(Account account) {
+    private boolean printMenu(Account account) {
         clearScreen();
         System.out.print(
                 "1. Withdraw\n" +
@@ -98,7 +114,7 @@ public class Main {
         return shouldContinue;
     }
 
-    private static boolean printFundTransferScreen(Account origin) {
+    private boolean printFundTransferScreen(Account origin) {
         clearScreen();
         System.out.print(
                 "Please enter destination account and \n" +
@@ -109,7 +125,7 @@ public class Main {
         return printFundTransferScreen2(origin, accountNumber);
     }
 
-    private static boolean printFundTransferScreen2(Account origin, String accountNumber) {
+    private boolean printFundTransferScreen2(Account origin, String accountNumber) {
         clearScreen();
         System.out.print(
                 "Please enter transfer amount and \n" +
@@ -120,7 +136,7 @@ public class Main {
         return printFundTransferScreen3(origin, amount, accountNumber);
     }
 
-    private static boolean printFundTransferScreen3(Account origin, String amount, String accountNumber) {
+    private boolean printFundTransferScreen3(Account origin, String amount, String accountNumber) {
         clearScreen();
         System.out.print(
                 "Please enter reference number (Optional) and \n" +
@@ -131,7 +147,7 @@ public class Main {
         return printFundTransferScreen4(origin, amount, accountNumber, referenceNumber);
     }
 
-    private static boolean printFundTransferScreen4(Account origin, String amount, String accountNumber, String referenceNumber) {
+    private boolean printFundTransferScreen4(Account origin, String amount, String accountNumber, String referenceNumber) {
         clearScreen();
         System.out.print(
                 "Transfer Confirmation\n" +
@@ -162,7 +178,7 @@ public class Main {
         return shouldContinue;
     }
 
-    private static boolean performFundTransfer(Account origin, String amount, String accountNumber, String referenceNumber) {
+    private boolean performFundTransfer(Account origin, String amount, String accountNumber, String referenceNumber) {
         try {
             Account destination = searchAccount(accountNumber);
             Long transferAmount = Long.parseLong(amount);
@@ -217,7 +233,7 @@ public class Main {
         return shouldContinue;
     }
 
-    private static boolean printWithdrawMenu(Account account) {
+    private boolean printWithdrawMenu(Account account) {
         clearScreen();
         boolean shouldContinue = false;
         do{
@@ -226,7 +242,7 @@ public class Main {
         return true; //To get back to previous menu
     }
 
-    private static boolean processWithdrawOption(Account account) {
+    private boolean processWithdrawOption(Account account) {
         System.out.print(
                 "1. $10\n" +
                 "2. $50\n" +
@@ -260,7 +276,7 @@ public class Main {
         return false;
     }
 
-    private static boolean printSummaryScreen(Long amount, Account account) {
+    private boolean printSummaryScreen(Long amount, Account account) {
         Instant now = Instant.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
 
@@ -289,7 +305,7 @@ public class Main {
         return true;
     }
 
-    private static boolean printOtherWithdrawScreen(Account account) {
+    private boolean printOtherWithdrawScreen(Account account) {
         clearScreen();
         System.out.println("Other Withdraw ");
         System.out.print("Enter amount to withdraw: ");
@@ -309,15 +325,15 @@ public class Main {
         return false;
     }
 
-    private static Account validateAccount(String account, String pin) {
+    private Account validateAccount(String account, String pin) {
         return AccountStore.getInstance().getAndValidateAccount(account, pin);
     }
 
-    private static Account searchAccount(String account) throws Exception {
+    private Account searchAccount(String account) throws Exception {
         return AccountStore.getInstance().getAccount(account);
     }
 
-    public static void clearScreen() {
+    public void clearScreen() {
         //Clears Screen in java
         try {
             if (System.getProperty("os.name").contains("Windows"))
