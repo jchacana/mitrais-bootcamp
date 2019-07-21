@@ -1,16 +1,12 @@
 package com.mitrais.bootcamp;
 
 import com.mitrais.bootcamp.domain.Account;
+import com.mitrais.bootcamp.domain.Transaction;
 import com.mitrais.bootcamp.service.AccountsService;
-import com.mitrais.bootcamp.store.AccountStore;
+import com.mitrais.bootcamp.service.TransactionService;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.Scanner;
-import java.util.Set;
 
 public class Main {
 
@@ -20,6 +16,8 @@ public class Main {
     private static Scanner scanner;
 
     private AccountsService accountsService;
+
+    private TransactionService transactionService;
 
     public static void main(String[] args) {
         Main program = new Main();
@@ -44,6 +42,7 @@ public class Main {
 
     public Main() {
         accountsService = new AccountsService();
+        transactionService = new TransactionService();
         scanner = new Scanner(System.in);
     }
 
@@ -122,10 +121,20 @@ public class Main {
                 "press cancel (Esc) to go back to Transaction: ");
         String accountNumber = scanner.nextLine();
         if("".equals(accountNumber)) return true;
-        return printFundTransferScreen2(origin, accountNumber);
+        Transaction transaction = new Transaction();
+        transaction.setOrigin(origin);
+        Account destination;
+        try {
+            destination = accountsService.getAccount(accountNumber);
+            transaction.setDestination(destination);
+            return printFundTransferScreen2(transaction);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
     }
 
-    private boolean printFundTransferScreen2(Account origin, String accountNumber) {
+    private boolean printFundTransferScreen2(Transaction transaction) throws Exception {
         clearScreen();
         System.out.print(
                 "Please enter transfer amount and \n" +
@@ -133,10 +142,16 @@ public class Main {
                 "press cancel (Esc) to go back to Transaction: ");
         String amount = scanner.nextLine();
         if("".equals(amount)) return false;
-        return printFundTransferScreen3(origin, amount, accountNumber);
+        try {
+            Long transferAmount = Long.parseLong(amount);
+            transaction.setAmount(transferAmount);
+            return printFundTransferScreen3(transaction );
+        } catch (NumberFormatException e) {
+            throw new Exception("Invalid amount");
+        }
     }
 
-    private boolean printFundTransferScreen3(Account origin, String amount, String accountNumber) {
+    private boolean printFundTransferScreen3(Transaction transaction) throws Exception {
         clearScreen();
         System.out.print(
                 "Please enter reference number (Optional) and \n" +
@@ -144,16 +159,18 @@ public class Main {
                 "press cancel (Esc) to go back to Transaction: ");
         String referenceNumber = scanner.nextLine();
         if("ESC".equals(referenceNumber)) return false;
-        return printFundTransferScreen4(origin, amount, accountNumber, referenceNumber);
+        validateReferenceNumber(referenceNumber);
+        transaction.setReferenceNumber(referenceNumber);
+        return printFundTransferScreen4(transaction);
     }
 
-    private boolean printFundTransferScreen4(Account origin, String amount, String accountNumber, String referenceNumber) {
+    private boolean printFundTransferScreen4(Transaction transaction) {
         clearScreen();
         System.out.print(
                 "Transfer Confirmation\n" +
-                "Destination Account : " + accountNumber + "\n" +
-                "Transfer Amount     : $" + amount + "\n" +
-                "Reference Number    : " + referenceNumber + "\n" +
+                "Destination Account : " + transaction.getDestination().getAccountNumber() + "\n" +
+                "Transfer Amount     : $" + transaction.getAmount() + "\n" +
+                "Reference Number    : " + transaction.getReferenceNumber() + "\n" +
                 "\n" +
                 "1. Confirm Trx\n" +
                 "2. Cancel Trx\n" +
@@ -166,7 +183,7 @@ public class Main {
             scanner.nextLine();
             switch (option) {
                 case 1:
-                    return performFundTransfer(origin, amount, accountNumber, referenceNumber);
+                    return performFundTransfer(transaction);
                 case 2:
                     return true;
                 default:
@@ -178,14 +195,10 @@ public class Main {
         return shouldContinue;
     }
 
-    private boolean performFundTransfer(Account origin, String amount, String accountNumber, String referenceNumber) {
+    private boolean performFundTransfer(Transaction transaction) {
         try {
-            Account destination = searchAccount(accountNumber);
-            Long transferAmount = Long.parseLong(amount);
-            validateReferenceNumber(referenceNumber);
-            origin.withdraw(transferAmount);
-            destination.deposit(transferAmount);
-            return printFundTransferSummaryScreen(origin, transferAmount, accountNumber, referenceNumber);
+            transactionService.performTransaction(transaction);
+            return printFundTransferSummaryScreen(transaction);
         } catch (NumberFormatException e) {
             System.out.println("Invalid Amount");
         } catch (Exception e) {
@@ -204,13 +217,13 @@ public class Main {
         }
     }
 
-    private static boolean printFundTransferSummaryScreen(Account origin, Long amount, String accountNumber, String referenceNumber) {
+    private static boolean printFundTransferSummaryScreen(Transaction transaction) {
         System.out.print(
                 "Fund Transfer Summary\n" +
-                "Destination Account : " + accountNumber +"\n" +
-                "Transfer Amount     : $" + amount +"\n" +
-                "Reference Number    : " + referenceNumber +"\n" +
-                "Balance             : $" + origin.getBalance() + "\n" +
+                "Destination Account : " + transaction.getDestination().getAccountNumber() +"\n" +
+                "Transfer Amount     : $" + transaction.getAmount() +"\n" +
+                "Reference Number    : " + transaction.getReferenceNumber() +"\n" +
+                "Balance             : $" + transaction.getOrigin().getBalance() + "\n" +
                 "\n" +
                 "1. Transaction\n" +
                 "2. Exit\n" +
@@ -251,17 +264,21 @@ public class Main {
                 "5. Back\n" +
                 "Please choose option[5]:");
         int option = scanner.nextInt();
+        Transaction transaction;
         try {
             switch (option) {
                 case 1:
-                    account.withdraw(10L);
-                    return printSummaryScreen(10L, account);
+                    transaction = new Transaction(Transaction.TransactionType.WITHDRAW, account, 10L);
+                    transactionService.performTransaction(transaction);
+                    return printWithDrawSummaryScreen(transaction);
                 case 2:
-                    account.withdraw(50L);
-                    return printSummaryScreen(50L, account);
+                    transaction = new Transaction(Transaction.TransactionType.WITHDRAW, account, 50L);
+                    transactionService.performTransaction(transaction);
+                    return printWithDrawSummaryScreen(transaction);
                 case 3:
-                    account.withdraw(100L);
-                    return printSummaryScreen(100L, account);
+                    transaction = new Transaction(Transaction.TransactionType.WITHDRAW, account, 100L);
+                    transactionService.performTransaction(transaction);
+                    return printWithDrawSummaryScreen(transaction);
                 case 4:
                     return printOtherWithdrawScreen(account);
                 case 5: //Get back to previous menu
@@ -276,14 +293,11 @@ public class Main {
         return false;
     }
 
-    private boolean printSummaryScreen(Long amount, Account account) {
-        Instant now = Instant.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
-
+    private boolean printWithDrawSummaryScreen(Transaction transaction) {
         System.out.print(
-                "Date : "+ formatter.format(now) + "\n" +
-                "Withdraw : $" + amount + "\n" +
-                "Balance : $" + account.getBalance() + "\n" +
+                "Date : "+ transaction.getTransactionDate() + "\n" +
+                "Withdraw : $" + transaction.getAmount() + "\n" +
+                "Balance : $" + transaction.getOrigin().getBalance() + "\n" +
                 "\n" +
                 "1. Transaction \n" +
                 "2. Exit\n" +
@@ -315,8 +329,9 @@ public class Main {
             amount = Long.parseLong(possibleNumber);
             if(amount % 10 != 0)
                 throw new Exception("Invalid Amount ");
-            account.withdraw(amount); //May throw an exception
-            return printSummaryScreen(amount, account);
+            Transaction transaction = new Transaction(Transaction.TransactionType.WITHDRAW, account, amount);
+            transactionService.performTransaction(transaction); //May throw an exception
+            return printWithDrawSummaryScreen(transaction);
         } catch (NumberFormatException ex) {
             System.out.println("Invalid Amount ");
         } catch (Exception e) {
@@ -326,11 +341,7 @@ public class Main {
     }
 
     private Account validateAccount(String account, String pin) {
-        return AccountStore.getInstance().getAndValidateAccount(account, pin);
-    }
-
-    private Account searchAccount(String account) throws Exception {
-        return AccountStore.getInstance().getAccount(account);
+        return accountsService.getAndValidateAccount(account, pin);
     }
 
     public void clearScreen() {

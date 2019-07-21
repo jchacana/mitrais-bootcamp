@@ -45,4 +45,12 @@ public class AccountsService {
     public Set<Account> getAllAccounts(){
         return accountStore.getAccounts();
     }
+
+    public Account getAndValidateAccount(String account, String pin) {
+        return accountStore.getAndValidateAccount(account, pin);
+    }
+
+    public Account getAccount(String account) throws Exception {
+        return accountStore.getAccount(account);
+    }
 }

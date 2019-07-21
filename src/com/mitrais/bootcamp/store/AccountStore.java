@@ -11,17 +11,17 @@ import java.util.Set;
 public class AccountStore {
 
     private static Set<Account> accounts;
-    private static AccountStore store;
+    private static AccountStore instance;
 
     private AccountStore() {
         accounts = new HashSet<>();
     }
 
     public static AccountStore getInstance() {
-        if(store == null) {
-            store = new AccountStore();
+        if(instance == null) {
+            instance = new AccountStore();
         }
-        return store;
+        return instance;
     }
 
     public void addAccount(Account account) throws Exception {
